@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) { // Login exitoso (200 OK)
                 // Guardar el ID y username en localStorage
-                localStorage.setItem('userId', data.userId)
-                localStorage.setItem('username', username) // Guardamos el username también
+                localStorage.setItem('userId', data.data.userId)
+                localStorage.setItem('username', data.data.username) // Guardamos el username también
 
                 // Redirigir a la página de perfil
                 window.location.href = 'profile.html'
