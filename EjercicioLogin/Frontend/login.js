@@ -1,8 +1,8 @@
-// login.js
+// login.js (Actualizado para JWT)
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm')
     const messageElement = document.getElementById('loginMessage')
-    const backendUrl = 'http://localhost:3000'
+    const backendUrl = 'http://localhost:3000' // URL base del API
 
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault()
@@ -10,37 +10,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('password').value
         messageElement.textContent = ''
 
-        if (!username || !password) {
-            messageElement.textContent = 'Por favor llenen todos los campos.'
-            return
-        }
+        if (!username || !password) { /* ... */ return }
 
         try {
-            const response = await fetch(`${backendUrl}/login`, {
+            const response = await fetch(`${backendUrl}/auth/login`, { // Ruta actualizada
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             })
 
-            const data = await response.json() // Esperamos JSON
+            const data = await response.json()
 
-            if (response.ok) { // Login exitoso (200 OK)
-                // Guardar el ID y username en localStorage
-                localStorage.setItem('userId', data.data.userId)
-                localStorage.setItem('username', data.data.username) // Guardamos el username también
+            if (response.ok) { // Login exitoso, esperamos token
+                if (data.token) {
+                    // --- INICIO CAMBIOS JWT ---
+                    // Guardar el token JWT en localStorage
+                    localStorage.setItem('jwtToken', data.token)
+                    // Ya no guardamos userId directamente
+                    localStorage.removeItem('userId')
+                    // Podríamos guardar el username si queremos mostrarlo rápido,
+                    // pero es mejor obtenerlo del perfil protegido.
+                    localStorage.removeItem('username')
+                    // --- FIN CAMBIOS JWT ---
 
-                // Redirigir a la página de perfil
-                window.location.href = 'profile.html'
-            } else { // Error (401, 500...)
+                    window.location.href = 'profile.html' // Redirigir al perfil
+                } else {
+                    messageElement.textContent = 'Error: No se recibió token del servidor.'
+                }
+            } else { // Error
                 messageElement.textContent = `Error: ${data.error || 'Usuario o contraseña inválidos'}`
-                localStorage.removeItem('userId') // Asegurar que no quede nada si falla
-                localStorage.removeItem('username')
+                localStorage.removeItem('jwtToken') // Limpiar token si falla
             }
         } catch (error) {
             console.error('Error de login:', error)
-            messageElement.textContent = 'Login falló. Problema de red o del servidor. Revisen la consola.'
-            localStorage.removeItem('userId')
-            localStorage.removeItem('username')
+            messageElement.textContent = 'Login falló. Problema de red o del servidor.'
+            localStorage.removeItem('jwtToken')
         }
     })
 })
